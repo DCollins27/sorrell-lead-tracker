@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorrell · Wedding Lead Tracker AI</title>
+<meta name="description" content="The AI-powered wedding photography lead tracker built for independent photographers.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --emerald-dark: #0A1F0F;
+  --emerald: #1B5E30;
+  --emerald-mid: #2D8B50;
+  --emerald-bright: #34A865;
+  --gold: #C9A96E;
+  --gold-light: #E6CD9B;
+  --gold-pale: #F5EBC8;
+  --cream: #FAF7F2;
+  --cream-warm: #F4EFE6;
+  --white-dim: #C8B8AC;
+  --charcoal: #1C1814;
+  --mid: #6B5B52;
+  --border: rgba(201,169,110,0.18);
+  --shadow: rgba(10,31,15,0.4);
+  --red: #C97A6E;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--emerald-dark);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  z-index: 999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.header {
+  background: linear-gradient(180deg, var(--emerald-dark) 0%, rgba(10,31,15,0.95) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--emerald);
+  border: 1px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--gold-light);
+  position: relative;
+}
+
+.brand-mark::before, .brand-mark::after {
+  content: '';
+  position: absolute;
+  background: var(--gold);
+  width: 4px; height: 4px;
+  transform: rotate(45deg);
+  left: 50%;
+  margin-left: -2px;
+}
+.brand-mark::before { top: -2px; }
+.brand-mark::after { bottom: -2px; }
+
+.brand-text { display: flex; flex-direction: column; }
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-style: italic;
+  color: var(--cream);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 3px;
+}
+
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+.ai-pill {
+  background: linear-gradient(135deg, rgba(201,169,110,0.15), rgba(201,169,110,0.05));
+  border: 1px solid var(--gold);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-pill::before {
+  content: '✦';
+  color: var(--gold);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.stats-strip {
+  background: rgba(13, 41, 24, 0.6);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 40px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+.stat { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.stat:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -12px; top: 50%;
+  transform: translateY(-50%);
+  width: 1px; height: 36px;
+  background: var(--border);
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+}
+
+.stat-meta { font-size: 11px; color: var(--white-dim); font-weight: 300; }
+.stat-meta.positive { color: var(--emerald-bright); }
+
+.toolbar {
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1;
+}
+.page-title em { font-style: italic; color: var(--gold); }
+
+.search-box { position: relative; }
+.search-box input {
+  background: rgba(13,41,24,0.8);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 10px 36px;
+  font-size: 13px;
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  width: 220px;
+  transition: all 0.2s;
+}
+.search-box input::placeholder { color: var(--white-dim); }
+.search-box input:focus { border-color: var(--gold); width: 280px; }
+
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.03em;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), #B8944A);
+  color: var(--emerald-dark);
+  font-weight: 600;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(201,169,110,0.3); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--white-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: rgba(201,169,110,0.08); color: var(--gold); border-color: var(--gold); }
+
+.btn-ai {
+  background: linear-gradient(135deg, rgba(201,169,110,0.2), rgba(45,139,80,0.2));
+  color: var(--gold-light);
+  border: 1px solid var(--gold);
+  font-weight: 500;
+}
+.btn-ai:hover { background: linear-gradient(135deg, rgba(201,169,110,0.3), rgba(45,139,80,0.3)); box-shadow: 0 4px 16px rgba(201,169,110,0.2); }
+
+.ai-bar {
+  margin: 0 40px 24px;
+  background: linear-gradient(135deg, rgba(13,41,24,0.9), rgba(27,94,48,0.4));
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(201,169,110,0.15), transparent 60%);
+  pointer-events: none;
+}
+
+.ai-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--emerald-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(201,169,110,0.4);
+}
+
+.ai-bar-content { flex: 1; }
+.ai-bar-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.ai-input {
+  width: 100%;
+  background: rgba(10,31,15,0.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.ai-input:focus { border-color: var(--gold); }
+.ai-input::placeholder { color: var(--white-dim); }
+
+.ai-bar-actions { display: flex; gap: 8px; }
+
+.board {
+  padding: 0 40px 40px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  min-height: 600px;
+}
+
+.column {
+  background: linear-gradient(180deg, rgba(13,41,24,0.5), rgba(13,41,24,0.2));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  max-height: 75vh;
+  transition: all 0.2s;
+}
+
+.column.drag-over { border-color: var(--gold); background: linear-gradient(180deg, rgba(27,94,48,0.4), rgba(13,41,24,0.3)); }
+
+.column-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cream);
+}
+
+.column-dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-new { background: var(--gold); }
+.dot-contacted { background: #E8A05C; }
+.dot-proposal { background: #8B5FBF; }
+.dot-booked { background: var(--emerald-bright); }
+.dot-lost { background: #8B6B5C; }
+
+.column-count {
+  background: rgba(201,169,110,0.1);
+  border: 1px solid var(--border);
+  color: var(--gold-light);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.column-cards {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.column-cards::-webkit-scrollbar { width: 4px; }
+.column-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.lead-card {
+  background: linear-gradient(135deg, rgba(250,247,242,0.06), rgba(250,247,242,0.02));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: grab;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.lead-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.lead-card:hover {
+  background: linear-gradient(135deg, rgba(250,247,242,0.1), rgba(250,247,242,0.04));
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--shadow);
+}
+.lead-card:hover::before { opacity: 1; }
+.lead-card.dragging { opacity: 0.4; cursor: grabbing; }
+
+.lead-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--cream);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.lead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 11px;
+  color: var(--white-dim);
+  margin-bottom: 8px;
+}
+
+.lead-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+
+.lead-budget {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: var(--gold);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.lead-notes {
+  font-size: 11px;
+  color: var(--white-dim);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+}
+
+.lead-source-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(201,169,110,0.1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-top: 8px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,31,15,0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+.modal.active { display: flex; }
+
+.modal-content {
+  background: linear-gradient(135deg, var(--emerald-dark), #0d2918);
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  color: var(--cream);
+  font-weight: 400;
+}
+.modal-title em { font-style: italic; color: var(--gold); }
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--white-dim);
+  cursor: pointer;
+  font-size: 14px;
+}
+.modal-close:hover { background: rgba(201,169,110,0.1); color: var(--gold); }
+
+.modal-body { padding: 24px 28px; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.form-group { margin-bottom: 14px; }
+
+.form-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: rgba(10,31,15,0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); }
+.form-input::placeholder, .form-textarea::placeholder { color: var(--white-dim); }
+.form-select option { background: var(--emerald-dark); color: var(--cream); }
+
+.modal-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ai-panel {
+  display: none;
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 400px;
+  background: linear-gradient(180deg, var(--emerald-dark), #0d2918);
+  border-left: 1px solid var(--gold);
+  z-index: 150;
+  padding: 24px;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+  box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+}
+.ai-panel.active { display: block; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.ai-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-panel-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  color: var(--cream);
+}
+.ai-panel-title em { color: var(--gold); font-style: italic; }
+
+.ai-output {
+  background: rgba(13,41,24,0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--cream);
+  white-space: pre-wrap;
+}
+
+.ai-output-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+  font-size: 13px;
+  padding: 14px;
+}
+
+.ai-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(201,169,110,0.3);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.copy-btn {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold-light);
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 8px;
+}
+.copy-btn:hover { background: var(--gold); color: var(--emerald-dark); }
+
+.pricing-footer {
+  margin: 24px 40px 40px;
+  background: linear-gradient(135deg, rgba(201,169,110,0.08), rgba(27,94,48,0.15));
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(201,169,110,0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.pricing-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.pricing-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.pricing-title em { color: var(--gold); font-style: italic; }
+
+.pricing-sub { font-size: 13px; color: var(--white-dim); margin-bottom: 16px; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--emerald-dark); }
+::-webkit-scrollbar-thumb { background: var(--emerald); border-radius: 3px; }
+
+@media (max-width: 1100px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat::after { display: none; }
+}
+@media (max-width: 640px) {
+  .board { grid-template-columns: 1fr; }
+  .ai-panel { width: 100%; }
+}
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: linear-gradient(135deg, var(--emerald), var(--emerald-mid));
+  border: 1px solid var(--gold);
+  color: var(--cream);
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 13px;
+  z-index: 1000;
+  opacity: 0;
+  transition: all 0.3s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: linear-gradient(135deg, #8B4A3C, #C97A6E); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-mark">S</div>
+    <div class="brand-text">
+      <span class="brand-name">Sorrell</span>
+      <span class="brand-sub">Lead Tracker AI</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ai-pill">AI Powered</div>
+    <button class="btn btn-ghost" onclick="exportData()">↓ Export</button>
+  </div>
+</header>
+
+<div class="stats-strip">
+  <div class="stat">
+    <div class="stat-label">Active Leads</div>
+    <div class="stat-value" id="statActive">0</div>
+    <div class="stat-meta">All pipelines</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Pipeline Value</div>
+    <div class="stat-value" id="statValue">$0</div>
+    <div class="stat-meta positive">Potential revenue</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Booked</div>
+    <div class="stat-value" id="statBooked">0</div>
+    <div class="stat-meta positive">This season</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Conversion Rate</div>
+    <div class="stat-value" id="statRate">0%</div>
+    <div class="stat-meta">Inquiry → Booked</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Avg Booking</div>
+    <div class="stat-value" id="statAvg">$0</div>
+    <div class="stat-meta">Average value</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h1 class="page-title">Your <em>Pipeline</em></h1>
+  </div>
+  <div class="toolbar-right">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="Search leads...">
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ New Lead</button>
+  </div>
+</div>
+
+<div class="ai-bar">
+  <div class="ai-avatar">✦</div>
+  <div class="ai-bar-content">
+    <div class="ai-bar-label">AI Assistant</div>
+    <input type="text" class="ai-input" id="aiInput" placeholder="Ask AI to draft a follow-up, analyze a lead, or suggest next steps...">
+  </div>
+  <div class="ai-bar-actions">
+    <button class="btn btn-ai" onclick="aiAnalyzePipeline()">✦ Analyze Pipeline</button>
+    <button class="btn btn-ai" onclick="aiAsk()">✦ Ask</button>
+  </div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="pricing-footer">
+  <div class="pricing-eyebrow">Sorrell Pro Membership</div>
+  <div class="pricing-title">Wedding Lead Tracker <em>AI</em></div>
+  <div class="pricing-sub">Available exclusively to Sorrell Pro members · $29/month</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">New <em>Lead</em></h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Couple Name</label>
+          <input type="text" class="form-input" id="name" placeholder="Emma & James">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Wedding Date</label>
+          <input type="date" class="form-input" id="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Venue</label>
+          <input type="text" class="form-input" id="venue" placeholder="Rosewood Estate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated Value ($)</label>
+          <input type="number" class="form-input" id="budget" placeholder="4500">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lead Source</label>
+          <select class="form-select" id="source">
+            <option value="">Select source...</option>
+            <option>Instagram</option>
+            <option>Pinterest</option>
+            <option>Referral</option>
+            <option>Google</option>
+            <option>Wedding Fair</option>
+            <option>Facebook</option>
+            <option>Website</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Package Interest</label>
+          <select class="form-select" id="package">
+            <option value="">Select...</option>
+            <option>Elopement</option>
+            <option>Half Day</option>
+            <option>Full Day</option>
+            <option>Premium</option>
+            <option>Custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="notes" placeholder="Add any relevant notes about this lead..."></textarea>
+      </div>
+      <button class="btn btn-ai" onclick="aiFillFromNotes()" style="margin-top: 4px;">✦ Let AI extract details from notes</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <h2 class="ai-panel-title"><em>AI</em> Insights</h2>
+    <button class="modal-close" onclick="closeAiPanel()">✕</button>
+  </div>
+  <div id="aiPanelContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let leads = JSON.parse(localStorage.getItem('sorrellLeads')) || [
+  {id:'1', name:'Emma & James Wilson', date:'2025-06-14', venue:'Rosewood Estate', budget:'4200', source:'Instagram', package:'Full Day', notes:'Sunset portraits requested. Boho aesthetic.', status:'contacted'},
+  {id:'2', name:'Sarah & Michael Chen', date:'2025-08-22', venue:'Vineyard Estate', budget:'6500', source:'Referral', package:'Premium', notes:'High priority. Referred by Emma.', status:'proposal'},
+  {id:'3', name:'Aisha & Liam Patel', date:'2025-09-07', venue:'The Greenhouse', budget:'4200', source:'Pinterest', package:'Full Day', notes:'Awaiting consultation call.', status:'new'},
+  {id:'4', name:'Zara & Pedro Santos', date:'2025-02-15', venue:'Camps Bay', budget:'2100', source:'Google', package:'Elopement', notes:'Already booked! Beach elopement.', status:'booked'},
+];
+
+let editingId = null;
+const columns = [
+  {id:'new', title:'New Leads', dot:'dot-new'},
+  {id:'contacted', title:'Contacted', dot:'dot-contacted'},
+  {id:'proposal', title:'Proposal Sent', dot:'dot-proposal'},
+  {id:'booked', title:'Booked', dot:'dot-booked'},
+  {id:'lost', title:'Lost', dot:'dot-lost'},
+];
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  columns.forEach(col => {
+    const filtered = leads.filter(l => l.status === col.id);
+    const cardsHTML = filtered.map(lead => `
+      <div class="lead-card" draggable="true"
+           ondragstart="drag(event, '${lead.id}')"
+           ondragend="dragEnd(event)"
+           onclick="editLead('${lead.id}')">
+        <div class="lead-name">${lead.name || 'Untitled'}</div>
+        <div class="lead-meta">
+          ${lead.date ? `<span class="lead-meta-item">📅 ${formatDate(lead.date)}</span>` : ''}
+          ${lead.venue ? `<span class="lead-meta-item">📍 ${lead.venue}</span>` : ''}
+        </div>
+        ${lead.budget ? `<div class="lead-budget">$${Number(lead.budget).toLocaleString()}</div>` : ''}
+        ${lead.notes ? `<div class="lead-notes">"${lead.notes.substring(0, 90)}${lead.notes.length > 90 ? '...' : ''}"</div>` : ''}
+        ${lead.source ? `<div class="lead-source-pill">${lead.source}</div>` : ''}
+      </div>
+    `).join('');
+    board.innerHTML += `
+      <div class="column" data-status="${col.id}"
+           ondrop="drop(event)" ondragover="allowDrop(event)"
+           ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+        <div class="column-header">
+          <div class="column-title">
+            <span class="column-dot ${col.dot}"></span>${col.title}
+          </div>
+          <span class="column-count">${filtered.length}</span>
+        </div>
+        <div class="column-cards">${cardsHTML}</div>
+      </div>
+    `;
+  });
+  updateStats();
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function updateStats() {
+  const active = leads.filter(l => l.status !== 'lost' && l.status !== 'booked').length;
+  const pipelineValue = leads.filter(l => l.status !== 'lost' && l.status !== 'booked').reduce((s,l)=>s+Number(l.budget||0),0);
+  const booked = leads.filter(l => l.status === 'booked').length;
+  const totalLeads = leads.filter(l => l.status !== 'lost').length;
+  const rate = totalLeads > 0 ? Math.round((booked/totalLeads)*100) : 0;
+  const bookedValue = leads.filter(l => l.status === 'booked').reduce((s,l)=>s+Number(l.budget||0),0);
+  const avg = booked > 0 ? Math.round(bookedValue/booked) : 0;
+
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statValue').textContent = '$' + (pipelineValue/1000).toFixed(1) + 'k';
+  document.getElementById('statBooked').textContent = booked;
+  document.getElementById('statRate').textContent = rate + '%';
+  document.getElementById('statAvg').textContent = '$' + (avg/1000).toFixed(1) + 'k';
+}
+
+function openModal() {
+  editingId = null;
+  document.getElementById('modalTitle').innerHTML = 'New <em>Lead</em>';
+  ['name','date','venue','budget','source','package','notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function editLead(id) {
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  editingId = id;
+  document.getElementById('modalTitle').innerHTML = 'Edit <em>Lead</em>';
+  document.getElementById('name').value = lead.name || '';
+  document.getElementById('date').value = lead.date || '';
+  document.getElementById('venue').value = lead.venue || '';
+  document.getElementById('budget').value = lead.budget || '';
+  document.getElementById('source').value = lead.source || '';
+  document.getElementById('package').value = lead.package || '';
+  document.getElementById('notes').value = lead.notes || '';
+  document.getElementById('modal').classList.add('active');
+}
+
+function saveLead() {
+  const name = document.getElementById('name').value;
+  if (!name) { showToast('Couple name is required', true); return; }
+  const data = {
+    name,
+    date: document.getElementById('date').value,
+    venue: document.getElementById('venue').value,
+    budget: document.getElementById('budget').value,
+    source: document.getElementById('source').value,
+    package: document.getElementById('package').value,
+    notes: document.getElementById('notes').value,
+  };
+  if (editingId) {
+    Object.assign(leads.find(l => l.id === editingId), data);
+    showToast('Lead updated');
+  } else {
+    leads.push({id: Date.now().toString(), ...data, status: 'new'});
+    showToast('Lead added');
+  }
+  localStorage.setItem('sorrellLeads', JSON.stringify(leads));
+  closeModal();
+  renderBoard();
+}
+
+function allowDrop(e) { e.preventDefault(); }
+function drag(e, id) { e.dataTransfer.setData('text', id); e.target.classList.add('dragging'); }
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.column.drag-over').forEach(c => c.classList.remove('drag-over'));
+}
+function dragEnter(e) {
+  if (e.currentTarget.classList.contains('column')) e.currentTarget.classList.add('drag-over');
+}
+function dragLeave(e) {
+  if (e.currentTarget.classList.contains('column') && !e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+function drop(e) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text');
+  const newStatus = e.currentTarget.dataset.status;
+  const lead = leads.find(l => l.id === id);
+  if (lead) {
+    lead.status = newStatus;
+    if (newStatus === 'booked') showToast('🎉 Booked! Congratulations!');
+  }
+  localStorage.setItem('sorrellLeads', JSON.stringify(leads));
+  renderBoard();
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll('.lead-card').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+});
+
+// AI FUNCTIONS — Calls /api/claude serverless function (NOT Anthropic directly)
+async function callClaude(prompt) {
+  try {
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt: prompt, max_tokens: 1000 })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      return 'AI error: ' + (err.error || 'Unknown error');
+    }
+    const data = await res.json();
+    return data.text || 'AI returned no response.';
+  } catch (err) {
+    return 'Connection error: ' + err.message;
+  }
+}
+
+async function aiAsk() {
+  const q = document.getElementById('aiInput').value;
+  if (!q) { showToast('Type a question first', true); return; }
+  openAiPanel();
+  const prompt = `You are an expert wedding photography business consultant inside the Sorrell Lead Tracker app.
+The user is a wedding photographer. Their current pipeline data:
+${JSON.stringify(leads, null, 2)}
+
+User's question: ${q}
+
+Provide actionable advice specific to wedding photography. Be concise (under 200 words). Use the actual lead data when relevant.`;
+  const result = await callClaude(prompt);
+  showAiResult('AI Response', result);
+  document.getElementById('aiInput').value = '';
+}
+
+async function aiAnalyzePipeline() {
+  openAiPanel();
+  const prompt = `You are an expert wedding photography business consultant analyzing a photographer's lead pipeline.
+
+Pipeline data:
+${JSON.stringify(leads, null, 2)}
+
+Provide a concise analysis covering:
+1. Pipeline health (1-2 sentences)
+2. Top opportunity right now (which lead to focus on and why)
+3. Risk areas (any leads going cold, missing data)
+4. Recommended next action this week
+
+Keep it under 250 words. Be specific and actionable.`;
+  const result = await callClaude(prompt);
+  showAiResult('Pipeline Analysis', result);
+}
+
+async function aiFillFromNotes() {
+  const notes = document.getElementById('notes').value;
+  if (!notes || notes.length < 20) { showToast('Add some notes first (min 20 chars)', true); return; }
+  showToast('AI extracting details...');
+  const prompt = `Extract wedding photography lead details from these notes. Return ONLY a JSON object with these exact fields (use null if not mentioned):
+{"name":"couple's names","date":"YYYY-MM-DD format","venue":"venue name","budget":"number only","source":"Instagram/Pinterest/Referral/Google/Wedding Fair/Facebook/Website/Other","package":"Elopement/Half Day/Full Day/Premium/Custom"}
+
+Notes: ${notes}
+
+Respond with ONLY the JSON object, no other text.`;
+  const result = await callClaude(prompt);
+  try {
+    const cleaned = result.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (parsed.name) document.getElementById('name').value = parsed.name;
+    if (parsed.date) document.getElementById('date').value = parsed.date;
+    if (parsed.venue) document.getElementById('venue').value = parsed.venue;
+    if (parsed.budget) document.getElementById('budget').value = parsed.budget;
+    if (parsed.source) document.getElementById('source').value = parsed.source;
+    if (parsed.package) document.getElementById('package').value = parsed.package;
+    showToast('✨ AI filled in the details');
+  } catch (e) {
+    showToast('Could not parse AI response', true);
+  }
+}
+
+function openAiPanel() {
+  document.getElementById('aiPanel').classList.add('active');
+  document.getElementById('aiPanelContent').innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div><span>AI is thinking...</span></div>';
+}
+
+function showAiResult(label, content) {
+  document.getElementById('aiPanelContent').innerHTML = `
+    <span class="ai-output-label">${label}</span>
+    <div class="ai-output">${content}</div>
+    <button class="copy-btn" onclick="copyAiOutput(\`${content.replace(/`/g,"'").replace(/\\/g,'\\\\')}\`)">Copy Response</button>
+  `;
+}
+
+function copyAiOutput(text) {
+  navigator.clipboard.writeText(text);
+  showToast('Copied to clipboard');
+}
+
+function closeAiPanel() { document.getElementById('aiPanel').classList.remove('active'); }
+
+function exportData() {
+  const dataStr = JSON.stringify(leads, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sorrell-leads-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('Exported');
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('aiInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') aiAsk();
+});
+
+renderBoard();
+</script>
+</body>
+</html>
