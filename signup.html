@@ -45,6 +45,10 @@ body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; 
 }
 .switch { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 18px; }
 .switch a { color: var(--accent-bright); font-weight: 600; }
+.terms-field { margin-bottom: 20px; }
+.terms-label { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text-dim); cursor: pointer; }
+.terms-label input { margin-top: 2px; }
+.terms-label a { color: var(--accent-bright); }
 </style>
 </head>
 <body>
@@ -74,6 +78,12 @@ body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; 
         <label>Password</label>
         <input type="password" id="password" placeholder="At least 8 characters" required autocomplete="new-password" minlength="8">
         <div class="hint">Minimum 8 characters.</div>
+      </div>
+      <div class="field terms-field">
+        <label class="terms-label">
+          <input type="checkbox" id="agreeTerms" required>
+          <span>I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a></span>
+        </label>
       </div>
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Create account</button>
     </form>
