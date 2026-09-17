@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
   trial_ends_at TIMESTAMPTZ NOT NULL,
   subscription_status TEXT NOT NULL DEFAULT 'trialing', -- trialing | active | past_due | canceled
   stripe_customer_id TEXT,
-  stripe_subscription_id TEXT
+  stripe_subscription_id TEXT,
+  failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+  locked_until TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS leads (

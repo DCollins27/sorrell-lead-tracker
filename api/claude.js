@@ -25,11 +25,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt, max_tokens = 1000 } = req.body || {};
+    const { prompt } = req.body || {};
 
     if (!prompt) {
       return res.status(400).json({ error: 'Missing prompt in request body' });
     }
+    if (prompt.length > 8000) {
+      return res.status(400).json({ error: 'Prompt is too long' });
+    }
+
+    // Fixed server-side cap: this endpoint isn't billed per-user, so client
+    // input must never control how much of the operator's Anthropic quota
+    // a single request can spend.
+    const max_tokens = 1000;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

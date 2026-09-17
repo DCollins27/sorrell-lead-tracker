@@ -7,6 +7,11 @@ export default async function handler(req, res) {
 
   const user = await getUserWithAccess(req);
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  if (user.subscription_status === 'active') {
+    return res
+      .status(409)
+      .json({ error: 'You already have an active subscription. Manage it from the billing portal.' });
+  }
 
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
     return res.status(500).json({ error: 'Billing is not configured yet' });

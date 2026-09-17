@@ -35,7 +35,7 @@ export default async function handler(req, res) {
           name,
           company || null,
           followUpDate || null,
-          value || null,
+          value === undefined || value === null || value === '' ? null : value,
           source || null,
           service || null,
           notes || null,
