@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Pipeline — ClosePilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+body { font-family: 'Inter', sans-serif; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.trial-pill {
+  background: var(--accent-dim);
+  border: 1px solid rgba(108,92,231,0.35);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-bright);
+}
+.trial-pill.expired { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.35); color: #FCA5A5; }
+
+.stats-strip {
+  background: var(--bg-panel-soft);
+  border-bottom: 1px solid var(--border);
+  padding: 22px 40px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+.stat { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.stat:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -12px; top: 50%;
+  transform: translateY(-50%);
+  width: 1px; height: 32px;
+  background: var(--border);
+}
+.stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+.stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
+.stat-meta { font-size: 11px; color: var(--text-faint); }
+.stat-meta.positive { color: var(--success); }
+
+.toolbar { padding: 22px 40px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+.page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+
+.search-box { position: relative; }
+.search-box input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 10px 34px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  width: 200px;
+  transition: all 0.2s;
+}
+.search-box input:focus { border-color: var(--accent); width: 260px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-faint); font-size: 13px; }
+
+.btn-ai {
+  background: var(--accent-dim);
+  color: var(--accent-bright);
+  border: 1px solid rgba(108,92,231,0.4);
+  font-weight: 600;
+}
+.btn-ai:hover { background: rgba(108,92,231,0.25); }
+.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.upgrade-banner {
+  margin: 0 40px 20px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(248,113,113,0.08));
+  border: 1px solid rgba(251,191,36,0.35);
+  border-radius: 14px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.upgrade-banner p { font-size: 13px; color: var(--text); }
+.upgrade-banner strong { color: var(--warning); }
+
+.ai-bar {
+  margin: 0 40px 20px;
+  background: linear-gradient(135deg, var(--bg-panel), rgba(108,92,231,0.06));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ai-avatar {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-bright), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #fff; flex-shrink: 0;
+}
+.ai-bar-content { flex: 1; }
+.ai-bar-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 4px; font-weight: 600; }
+.ai-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.ai-input:focus { border-color: var(--accent); }
+.ai-bar-actions { display: flex; gap: 8px; }
+
+.board { padding: 0 40px 40px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; min-height: 500px; }
+.column { background: var(--bg-panel-soft); border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; max-height: 72vh; transition: all 0.2s; }
+.column.drag-over { border-color: var(--accent); background: rgba(108,92,231,0.06); }
+.column-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.column-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+.column-dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-new { background: var(--accent-bright); }
+.dot-contacted { background: #E8A05C; }
+.dot-proposal { background: #C084FC; }
+.dot-won { background: var(--success); }
+.dot-lost { background: #8B6B5C; }
+.column-count { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+.column-cards { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+.lead-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px; cursor: grab; transition: all 0.15s; position: relative; }
+.lead-card:hover { background: var(--surface-hover); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 20px var(--shadow); }
+.lead-card.dragging { opacity: 0.4; cursor: grabbing; }
+.lead-name { font-size: 14.5px; font-weight: 700; margin-bottom: 6px; }
+.lead-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.lead-value { font-size: 15px; color: var(--accent-bright); font-weight: 700; margin-top: 2px; }
+.lead-notes { font-size: 11.5px; color: var(--text-dim); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.5; font-style: italic; }
+.lead-source-pill { display: inline-block; padding: 2px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim); margin-top: 8px; }
+
+.modal { display: none; position: fixed; inset: 0; background: rgba(5,7,12,0.8); backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+.modal.active { display: flex; }
+.modal-content { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 22px 26px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 18px; font-weight: 800; }
+.modal-close { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--text-dim); cursor: pointer; font-size: 14px; }
+.modal-close:hover { background: var(--surface); color: var(--text); }
+.modal-body { padding: 22px 26px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; display: block; font-weight: 700; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.form-textarea { resize: vertical; min-height: 76px; line-height: 1.6; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-select option { background: var(--bg-panel); color: var(--text); }
+.modal-footer { padding: 16px 26px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: space-between; }
+.modal-footer .right-actions { display: flex; gap: 8px; }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(248,113,113,0.35); }
+.btn-danger:hover { background: rgba(248,113,113,0.1); }
+
+.ai-panel { display: none; position: fixed; right: 0; top: 0; bottom: 0; width: 400px; background: var(--bg-panel); border-left: 1px solid var(--border); z-index: 150; padding: 24px; overflow-y: auto; box-shadow: -10px 0 40px rgba(0,0,0,0.5); }
+.ai-panel.active { display: block; }
+.ai-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.ai-panel-title { font-size: 18px; font-weight: 800; }
+.ai-output { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.ai-output-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 8px; display: block; font-weight: 700; }
+.ai-loading { display: flex; align-items: center; gap: 10px; color: var(--accent-bright); font-size: 13px; padding: 14px; }
+.ai-spinner { width: 14px; height: 14px; border: 2px solid rgba(108,92,231,0.3); border-top-color: var(--accent-bright); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.copy-btn { font-size: 10px; letter-spacing: 0.08em; color: var(--accent-bright); cursor: pointer; background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; text-transform: uppercase; font-weight: 600; margin-top: 8px; }
+.copy-btn:hover { background: var(--accent); color: #fff; }
+
+.loading-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--text-dim); font-size: 14px; z-index: 500; }
+
+@media (max-width: 1100px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat::after { display: none; }
+}
+@media (max-width: 640px) {
+  .board { grid-template-columns: 1fr; }
+  .ai-panel { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">Loading your pipeline…</div>
+
+<header class="nav">
+  <a href="/" class="brand">
+    <div class="brand-mark">CP</div>
+    <div class="brand-name">ClosePilot</div>
+  </a>
+  <div class="header-right">
+    <span class="trial-pill" id="trialPill" style="display:none;"></span>
+    <button class="btn btn-ghost" id="billingBtn" style="display:none;">Manage billing</button>
+    <button class="btn btn-primary" id="upgradeBtn" style="display:none;">Upgrade now</button>
+    <button class="btn btn-ghost" onclick="exportData()">Export</button>
+    <button class="btn btn-ghost" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<div class="stats-strip">
+  <div class="stat">
+    <div class="stat-label">Active Leads</div>
+    <div class="stat-value" id="statActive">0</div>
+    <div class="stat-meta">All pipelines</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Pipeline Value</div>
+    <div class="stat-value" id="statValue">$0</div>
+    <div class="stat-meta positive">Potential revenue</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Won</div>
+    <div class="stat-value" id="statWon">0</div>
+    <div class="stat-meta positive">This period</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Win Rate</div>
+    <div class="stat-value" id="statRate">0%</div>
+    <div class="stat-meta">Lead → Won</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Avg Deal</div>
+    <div class="stat-value" id="statAvg">$0</div>
+    <div class="stat-meta">Average value</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h1 class="page-title">Your Pipeline</h1>
+  </div>
+  <div class="toolbar-right">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="Search leads...">
+    </div>
+    <button class="btn btn-primary" id="newLeadBtn" onclick="openModal()">+ New Lead</button>
+  </div>
+</div>
+
+<div class="upgrade-banner" id="upgradeBanner" style="display:none;">
+  <p><strong>Your free trial has ended.</strong> Subscribe for $29/mo to keep adding leads and using AI.</p>
+  <button class="btn btn-primary" onclick="startCheckout()">Subscribe now</button>
+</div>
+
+<div class="ai-bar">
+  <div class="ai-avatar">✦</div>
+  <div class="ai-bar-content">
+    <div class="ai-bar-label">AI Assistant</div>
+    <input type="text" class="ai-input" id="aiInput" placeholder="Ask AI to draft a follow-up, analyze a lead, or suggest next steps...">
+  </div>
+  <div class="ai-bar-actions">
+    <button class="btn btn-ai" id="analyzeBtn" onclick="aiAnalyzePipeline()">✦ Analyze Pipeline</button>
+    <button class="btn btn-ai" id="askBtn" onclick="aiAsk()">✦ Ask</button>
+  </div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">New Lead</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lead / Client Name</label>
+          <input type="text" class="form-input" id="name" placeholder="Jamie Rivera">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Follow-up / Close Date</label>
+          <input type="date" class="form-input" id="followUpDate">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <input type="text" class="form-input" id="company" placeholder="Rivera & Co.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deal Value ($)</label>
+          <input type="number" class="form-input" id="value" placeholder="4500">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lead Source</label>
+          <select class="form-select" id="source">
+            <option value="">Select source...</option>
+            <option>Referral</option>
+            <option>Google</option>
+            <option>LinkedIn</option>
+            <option>Instagram</option>
+            <option>Website</option>
+            <option>Cold Outreach</option>
+            <option>Networking Event</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Interested In</label>
+          <input type="text" class="form-input" id="service" placeholder="e.g. Strategy consulting">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="notes" placeholder="Add any relevant notes about this lead..."></textarea>
+      </div>
+      <button class="btn btn-ai" id="aiFillBtn" onclick="aiFillFromNotes()" style="margin-top: 4px;">✦ Let AI extract details from notes</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteLead()" style="display:none;">Delete</button>
+      <div class="right-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveLead()">Save Lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <h2 class="ai-panel-title">AI Insights</h2>
+    <button class="modal-close" onclick="closeAiPanel()">✕</button>
+  </div>
+  <div id="aiPanelContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let leads = [];
+let editingId = null;
+let account = null;
+
+const columns = [
+  {id:'new', title:'New Leads', dot:'dot-new'},
+  {id:'contacted', title:'Contacted', dot:'dot-contacted'},
+  {id:'proposal', title:'Proposal Sent', dot:'dot-proposal'},
+  {id:'won', title:'Won', dot:'dot-won'},
+  {id:'lost', title:'Lost', dot:'dot-lost'},
+];
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if (res.status === 401) {
+    window.location.href = '/login.html';
+    throw new Error('Not authenticated');
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function init() {
+  const meRes = await api('/api/auth/me');
+  if (!meRes.ok) { window.location.href = '/login.html'; return; }
+  account = meRes.data;
+  renderAccountUI();
+
+  const leadsRes = await api('/api/leads');
+  if (leadsRes.ok) leads = leadsRes.data.leads.map(normalizeLead);
+  document.getElementById('loadingScreen').style.display = 'none';
+  renderBoard();
+}
+
+function normalizeLead(l) {
+  return {
+    id: l.id,
+    name: l.name,
+    company: l.company,
+    followUpDate: l.follow_up_date,
+    value: l.value,
+    source: l.source,
+    service: l.service,
+    notes: l.notes,
+    status: l.status,
+  };
+}
+
+function renderAccountUI() {
+  const trialPill = document.getElementById('trialPill');
+  const upgradeBanner = document.getElementById('upgradeBanner');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const billingBtn = document.getElementById('billingBtn');
+  const newLeadBtn = document.getElementById('newLeadBtn');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const askBtn = document.getElementById('askBtn');
+  const aiFillBtn = document.getElementById('aiFillBtn');
+
+  if (account.subscriptionStatus === 'active') {
+    trialPill.style.display = 'none';
+    billingBtn.style.display = 'inline-flex';
+    upgradeBtn.style.display = 'none';
+    upgradeBanner.style.display = 'none';
+  } else if (account.trialActive) {
+    const daysLeft = Math.max(0, Math.ceil((new Date(account.trialEndsAt) - new Date()) / 86400000));
+    trialPill.textContent = `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in trial`;
+    trialPill.style.display = 'inline-block';
+    upgradeBtn.style.display = 'inline-flex';
+    billingBtn.style.display = 'none';
+    upgradeBanner.style.display = 'none';
+  } else {
+    trialPill.textContent = 'Trial ended';
+    trialPill.classList.add('expired');
+    trialPill.style.display = 'inline-block';
+    upgradeBtn.style.display = 'inline-flex';
+    billingBtn.style.display = 'none';
+    upgradeBanner.style.display = 'flex';
+  }
+
+  if (!account.hasAccess) {
+    newLeadBtn.disabled = true;
+    analyzeBtn.disabled = true;
+    askBtn.disabled = true;
+    aiFillBtn.disabled = true;
+  }
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  columns.forEach(col => {
+    const filtered = leads.filter(l => l.status === col.id);
+    const cardsHTML = filtered.map(lead => `
+      <div class="lead-card" draggable="true"
+           ondragstart="drag(event, '${lead.id}')"
+           ondragend="dragEnd(event)"
+           onclick="editLead('${lead.id}')">
+        <div class="lead-name">${escapeHtml(lead.name || 'Untitled')}</div>
+        <div class="lead-meta">
+          ${lead.followUpDate ? `<span>📅 ${formatDate(lead.followUpDate)}</span>` : ''}
+          ${lead.company ? `<span>🏢 ${escapeHtml(lead.company)}</span>` : ''}
+        </div>
+        ${lead.value ? `<div class="lead-value">$${Number(lead.value).toLocaleString()}</div>` : ''}
+        ${lead.notes ? `<div class="lead-notes">"${escapeHtml(lead.notes.substring(0, 90))}${lead.notes.length > 90 ? '...' : ''}"</div>` : ''}
+        ${lead.source ? `<div class="lead-source-pill">${escapeHtml(lead.source)}</div>` : ''}
+      </div>
+    `).join('');
+    board.innerHTML += `
+      <div class="column" data-status="${col.id}"
+           ondrop="drop(event)" ondragover="allowDrop(event)"
+           ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+        <div class="column-header">
+          <div class="column-title"><span class="column-dot ${col.dot}"></span>${col.title}</div>
+          <span class="column-count">${filtered.length}</span>
+        </div>
+        <div class="column-cards">${cardsHTML}</div>
+      </div>
+    `;
+  });
+  updateStats();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function updateStats() {
+  const active = leads.filter(l => l.status !== 'lost' && l.status !== 'won').length;
+  const pipelineValue = leads.filter(l => l.status !== 'lost' && l.status !== 'won').reduce((s,l)=>s+Number(l.value||0),0);
+  const won = leads.filter(l => l.status === 'won').length;
+  const totalLeads = leads.filter(l => l.status !== 'lost').length;
+  const rate = totalLeads > 0 ? Math.round((won/totalLeads)*100) : 0;
+  const wonValue = leads.filter(l => l.status === 'won').reduce((s,l)=>s+Number(l.value||0),0);
+  const avg = won > 0 ? Math.round(wonValue/won) : 0;
+
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statValue').textContent = '$' + (pipelineValue/1000).toFixed(1) + 'k';
+  document.getElementById('statWon').textContent = won;
+  document.getElementById('statRate').textContent = rate + '%';
+  document.getElementById('statAvg').textContent = '$' + (avg/1000).toFixed(1) + 'k';
+}
+
+function openModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'New Lead';
+  document.getElementById('deleteBtn').style.display = 'none';
+  ['name','followUpDate','company','value','source','service','notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function editLead(id) {
+  const lead = leads.find(l => l.id == id);
+  if (!lead) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Lead';
+  document.getElementById('deleteBtn').style.display = 'inline-flex';
+  document.getElementById('name').value = lead.name || '';
+  document.getElementById('followUpDate').value = lead.followUpDate || '';
+  document.getElementById('company').value = lead.company || '';
+  document.getElementById('value').value = lead.value || '';
+  document.getElementById('source').value = lead.source || '';
+  document.getElementById('service').value = lead.service || '';
+  document.getElementById('notes').value = lead.notes || '';
+  document.getElementById('modal').classList.add('active');
+}
+
+async function saveLead() {
+  const name = document.getElementById('name').value;
+  if (!name) { showToast('Lead name is required', true); return; }
+  const payload = {
+    name,
+    followUpDate: document.getElementById('followUpDate').value || null,
+    company: document.getElementById('company').value,
+    value: document.getElementById('value').value || null,
+    source: document.getElementById('source').value,
+    service: document.getElementById('service').value,
+    notes: document.getElementById('notes').value,
+  };
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  try {
+    if (editingId) {
+      const { ok, data } = await api(`/api/leads/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+      if (!ok) { showToast(data.error || 'Could not update lead', true); return; }
+      Object.assign(leads.find(l => l.id == editingId), normalizeLead(data.lead));
+      showToast('Lead updated');
+    } else {
+      const { ok, data } = await api('/api/leads', { method: 'POST', body: JSON.stringify({ ...payload, status: 'new' }) });
+      if (!ok) { showToast(data.error || 'Could not add lead', true); return; }
+      leads.push(normalizeLead(data.lead));
+      showToast('Lead added');
+    }
+    closeModal();
+    renderBoard();
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+async function deleteLead() {
+  if (!editingId) return;
+  if (!confirm('Delete this lead? This cannot be undone.')) return;
+  const { ok, data } = await api(`/api/leads/${editingId}`, { method: 'DELETE' });
+  if (!ok) { showToast(data.error || 'Could not delete lead', true); return; }
+  leads = leads.filter(l => l.id != editingId);
+  closeModal();
+  renderBoard();
+  showToast('Lead deleted');
+}
+
+function allowDrop(e) { e.preventDefault(); }
+function drag(e, id) { e.dataTransfer.setData('text', id); e.target.classList.add('dragging'); }
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.column.drag-over').forEach(c => c.classList.remove('drag-over'));
+}
+function dragEnter(e) { if (e.currentTarget.classList.contains('column')) e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e) {
+  if (e.currentTarget.classList.contains('column') && !e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+async function drop(e) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text');
+  const newStatus = e.currentTarget.dataset.status;
+  const lead = leads.find(l => l.id == id);
+  if (!lead) return;
+  const prevStatus = lead.status;
+  lead.status = newStatus;
+  renderBoard();
+  const { ok, data } = await api(`/api/leads/${id}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
+  if (!ok) {
+    lead.status = prevStatus;
+    renderBoard();
+    showToast(data.error || 'Could not move lead', true);
+    return;
+  }
+  if (newStatus === 'won') showToast('🎉 Deal won! Congratulations!');
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll('.lead-card').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+});
+
+async function callClaude(prompt) {
+  const { ok, status, data } = await api('/api/claude', {
+    method: 'POST',
+    body: JSON.stringify({ prompt, max_tokens: 1000 }),
+  });
+  if (!ok) {
+    if (status === 402) return data.error;
+    return 'AI error: ' + (data.error || 'Unknown error');
+  }
+  return data.text || 'AI returned no response.';
+}
+
+async function aiAsk() {
+  if (!account.hasAccess) { showToast('Subscribe to use the AI assistant', true); return; }
+  const q = document.getElementById('aiInput').value;
+  if (!q) { showToast('Type a question first', true); return; }
+  openAiPanel();
+  const prompt = `You are an expert sales and business-development consultant inside the ClosePilot lead pipeline app.
+The user runs a solo service business. Their current pipeline data:
+${JSON.stringify(leads, null, 2)}
+
+User's question: ${q}
+
+Provide actionable advice specific to running a solo service business. Be concise (under 200 words). Use the actual lead data when relevant.`;
+  const result = await callClaude(prompt);
+  showAiResult('AI Response', result);
+  document.getElementById('aiInput').value = '';
+}
+
+async function aiAnalyzePipeline() {
+  if (!account.hasAccess) { showToast('Subscribe to use the AI assistant', true); return; }
+  openAiPanel();
+  const prompt = `You are an expert sales consultant analyzing a solo service business's lead pipeline.
+
+Pipeline data:
+${JSON.stringify(leads, null, 2)}
+
+Provide a concise analysis covering:
+1. Pipeline health (1-2 sentences)
+2. Top opportunity right now (which lead to focus on and why)
+3. Risk areas (any leads going cold, missing data)
+4. Recommended next action this week
+
+Keep it under 250 words. Be specific and actionable.`;
+  const result = await callClaude(prompt);
+  showAiResult('Pipeline Analysis', result);
+}
+
+async function aiFillFromNotes() {
+  if (!account.hasAccess) { showToast('Subscribe to use the AI assistant', true); return; }
+  const notes = document.getElementById('notes').value;
+  if (!notes || notes.length < 20) { showToast('Add some notes first (min 20 chars)', true); return; }
+  showToast('AI extracting details...');
+  const prompt = `Extract sales lead details from these notes for a solo service business. Return ONLY a JSON object with these exact fields (use null if not mentioned):
+{"name":"lead/client name","followUpDate":"YYYY-MM-DD format","company":"company name","value":"number only","source":"Referral/Google/LinkedIn/Instagram/Website/Cold Outreach/Networking Event/Other","service":"short description of the service they want"}
+
+Notes: ${notes}
+
+Respond with ONLY the JSON object, no other text.`;
+  const result = await callClaude(prompt);
+  try {
+    const cleaned = result.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (parsed.name) document.getElementById('name').value = parsed.name;
+    if (parsed.followUpDate) document.getElementById('followUpDate').value = parsed.followUpDate;
+    if (parsed.company) document.getElementById('company').value = parsed.company;
+    if (parsed.value) document.getElementById('value').value = parsed.value;
+    if (parsed.source) document.getElementById('source').value = parsed.source;
+    if (parsed.service) document.getElementById('service').value = parsed.service;
+    showToast('✨ AI filled in the details');
+  } catch (e) {
+    showToast('Could not parse AI response', true);
+  }
+}
+
+function openAiPanel() {
+  document.getElementById('aiPanel').classList.add('active');
+  document.getElementById('aiPanelContent').innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div><span>AI is thinking...</span></div>';
+}
+
+function showAiResult(label, content) {
+  document.getElementById('aiPanelContent').innerHTML = `
+    <span class="ai-output-label">${label}</span>
+    <div class="ai-output">${escapeHtml(content)}</div>
+    <button class="copy-btn" id="copyOutputBtn">Copy Response</button>
+  `;
+  document.getElementById('copyOutputBtn').addEventListener('click', () => copyAiOutput(content));
+}
+
+function copyAiOutput(text) {
+  navigator.clipboard.writeText(text);
+  showToast('Copied to clipboard');
+}
+
+function closeAiPanel() { document.getElementById('aiPanel').classList.remove('active'); }
+
+function exportData() {
+  const dataStr = JSON.stringify(leads, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `closepilot-leads-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('Exported');
+}
+
+async function startCheckout() {
+  const { ok, data } = await api('/api/stripe/create-checkout-session', { method: 'POST' });
+  if (!ok) { showToast(data.error || 'Could not start checkout', true); return; }
+  window.location.href = data.url;
+}
+
+document.getElementById('upgradeBtn').addEventListener('click', startCheckout);
+document.getElementById('billingBtn').addEventListener('click', async () => {
+  const { ok, data } = await api('/api/stripe/create-portal-session', { method: 'POST' });
+  if (!ok) { showToast(data.error || 'Could not open billing portal', true); return; }
+  window.location.href = data.url;
+});
+
+async function logout() {
+  await api('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('aiInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') aiAsk();
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start your free trial — ClosePilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+.wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.card {
+  width: 100%; max-width: 400px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+}
+.card h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.card .sub { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; }
+.field input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 13px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.field input:focus { border-color: var(--accent); }
+.field .hint { font-size: 11px; color: var(--text-faint); margin-top: 5px; }
+.error-box {
+  display: none;
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.35);
+  color: #FCA5A5;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.switch { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 18px; }
+.switch a { color: var(--accent-bright); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a href="/" class="brand">
+    <div class="brand-mark">CP</div>
+    <div class="brand-name">ClosePilot</div>
+  </a>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <h1>Start your free trial</h1>
+    <div class="sub">14 days free. No credit card required.</div>
+    <div class="error-box" id="errorBox"></div>
+    <form id="signupForm">
+      <div class="field">
+        <label>Business / your name</label>
+        <input type="text" id="businessName" placeholder="Jordan Smith Consulting" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="At least 8 characters" required autocomplete="new-password" minlength="8">
+        <div class="hint">Minimum 8 characters.</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Create account</button>
+    </form>
+    <div class="switch">Already have an account? <a href="/login.html">Log in</a></div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('signupForm');
+const errorBox = document.getElementById('errorBox');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Creating account...';
+
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        businessName: document.getElementById('businessName').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errorBox.textContent = data.error || 'Could not create account.';
+      errorBox.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create account';
+      return;
+    }
+    window.location.href = '/app.html';
+  } catch (err) {
+    errorBox.textContent = 'Connection error. Please try again.';
+    errorBox.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create account';
+  }
+});
+</script>
+</body>
+</html>
